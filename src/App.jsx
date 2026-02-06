@@ -8,6 +8,7 @@ import { LanguageProvider, useLanguage } from './context/LanguageContext';
 
 const DiaryContent = () => {
   const { t } = useLanguage();
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   const [meals, setMeals] = useState({
     breakfast: [
@@ -30,7 +31,10 @@ const DiaryContent = () => {
       <div className="app-container">
 
         <div className="date-header-wrapper">
-          <DateHeader />
+          <DateHeader
+            currentDate={currentDate}
+            onDateChange={setCurrentDate}
+          />
         </div>
 
         <div className="summary-wrapper">

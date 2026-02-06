@@ -1,33 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480">
-<path fill="#bd3d44" d="M0 0h640v480H0"/>
-<path stroke="#fff" stroke-width="37" d="M0 55.3h640M0 129h640M0 203h640M0 277h640M0 351h640M0 425h640"/>
-<path fill="#192f5d" d="M0 0h257v258H0"/>
-<marker id="s" markerHeight="30" markerWidth="30">
-<path fill="#fff" d="M14 0l9 27L0 10h28L5 27z"/>
-</marker>
-<use xlink:href="#s" x="42" y="30"/>
-<use xlink:href="#s" x="105" y="30"/>
-<use xlink:href="#s" x="168" y="30"/>
-<use xlink:href="#s" x="231" y="30"/>
-<use xlink:href="#s" x="73" y="66"/>
-<use xlink:href="#s" x="136" y="66"/>
-<use xlink:href="#s" x="199" y="66"/>
-<use xlink:href="#s" x="42" y="102"/>
-<use xlink:href="#s" x="105" y="102"/>
-<use xlink:href="#s" x="168" y="102"/>
-<use xlink:href="#s" x="231" y="102"/>
-<use xlink:href="#s" x="73" y="138"/>
-<use xlink:href="#s" x="136" y="138"/>
-<use xlink:href="#s" x="199" y="138"/>
-<use xlink:href="#s" x="42" y="174"/>
-<use xlink:href="#s" x="105" y="174"/>
-<use xlink:href="#s" x="168" y="174"/>
-<use xlink:href="#s" x="231" y="174"/>
-<use xlink:href="#s" x="73" y="211"/>
-<use xlink:href="#s" x="136" y="211"/>
-<use xlink:href="#s" x="199" y="211"/>
-<use xlink:href="#s" x="42" y="247"/>
-<use xlink:href="#s" x="105" y="247"/>
-<use xlink:href="#s" x="168" y="247"/>
-<use xlink:href="#s" x="231" y="247"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7410 3900">
+<rect width="7410" height="3900" fill="#b22234"/>
+<path d="M0,450H7410V750H0ZM0,1050H7410V1350H0ZM0,1650H7410V1950H0ZM0,2250H7410V2550H0ZM0,2850H7410V3150H0ZM0,3450H7410V3750H0Z" fill="#fff"/>
+<rect width="2964" height="2100" fill="#3c3b6e"/>
+<g fill="#fff">
+<g id="s18">
+<g id="s9">
+<g id="s5">
+<g id="s4">
+<path id="s" d="M247,90 317.533,307.061 545.791,307.061 361.129,441.222 431.661,658.283 247,524.121 62.339,658.283 132.871,441.222 -51.791,307.061 176.467,307.061z"/>
+<use href="#s" x="494"/>
+<use href="#s" x="988"/>
+<use href="#s" x="1482"/>
+</g>
+<use href="#s" x="1976"/>
+</g>
+<use href="#s5" x="2470"/>
+<use href="#s4" y="336"/>
+<use href="#s9" y="336"/>
+</g>
+<use href="#s18" y="672"/>
+<use href="#s9" y="1344"/>
+<use href="#s5" y="1344"/>
+</g>
+</g>
 </svg>
