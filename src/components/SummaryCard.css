@@ -1,0 +1,138 @@
+.summary-card {
+    padding: 24px;
+}
+
+.main-stat {
+    display: flex;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 24px;
+}
+
+.progress-container {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.progress-ring {
+    transform: rotate(-90deg);
+}
+
+.stat-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.remaining-text {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1;
+    text-shadow: 0 0 20px rgba(45, 212, 191, 0.3);
+}
+
+.remaining-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 8px;
+}
+
+.stats-row {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 20px;
+    border-top: 1px solid var(--glass-border);
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+.stat-item .label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+}
+
+.stat-item .value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+/* Macro Rings Section */
+.macros-row {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 20px;
+    border-top: 1px solid var(--glass-border);
+    margin-top: 20px;
+}
+
+.macro-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.macro-ring-container {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.macro-ring-container svg {
+    transform: rotate(-90deg);
+}
+
+/* Specific colors per macro */
+.macro-item.carbs circle:nth-child(2) {
+    stroke: #3b82f6;
+}
+
+/* Blue */
+.macro-item.protein circle:nth-child(2) {
+    stroke: #10b981;
+}
+
+/* Green */
+.macro-item.fat circle:nth-child(2) {
+    stroke: #f59e0b;
+}
+
+/* Amber */
+
+.macro-val {
+    position: absolute;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.macro-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}

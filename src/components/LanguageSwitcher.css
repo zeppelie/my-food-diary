@@ -1,0 +1,42 @@
+.language-switcher {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 20px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: var(--text-main);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.language-switcher:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.language-switcher:active {
+    transform: translateY(0);
+}
+
+.lang-flag-img {
+    width: 20px;
+    height: 15px;
+    border-radius: 2px;
+    object-fit: cover;
+}
+
+.lang-code {
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
