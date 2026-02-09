@@ -15,7 +15,17 @@ export const translations = {
         carbs: "Carbs",
         protein: "Protein",
         fat: "Fat",
-        macros: "Macros"
+        fats: "Fats",
+        macros: "Macros",
+        // AddFoodModal translations
+        searchFood: "Search for food...",
+        noResults: "No results found",
+        startTyping: "Start typing to search for food...",
+        servingSize: "Serving Size",
+        nutritionInfo: "Nutrition Information",
+        calories: "Calories",
+        cancel: "Cancel",
+        add: "Add to"
     },
     it: {
         today: "Oggi",
@@ -33,6 +43,16 @@ export const translations = {
         carbs: "Carboidrati",
         protein: "Proteine",
         fat: "Grassi",
-        macros: "Macronutrienti"
+        fats: "Grassi",
+        macros: "Macronutrienti",
+        // AddFoodModal translations
+        searchFood: "Cerca cibo...",
+        noResults: "Nessun risultato trovato",
+        startTyping: "Inizia a digitare per cercare cibo...",
+        servingSize: "Porzione",
+        nutritionInfo: "Informazioni Nutrizionali",
+        calories: "Calorie",
+        cancel: "Annulla",
+        add: "Aggiungi a"
     }
 };

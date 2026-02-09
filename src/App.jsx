@@ -12,18 +12,26 @@ const DiaryContent = () => {
 
   const [meals, setMeals] = useState({
     breakfast: [
-      { name: 'Oatmeal & Blueberries', cals: 350 },
-      { name: 'Coffee', cals: 10 }
+      { name: 'Avena e Mirtilli', cals: 350 },
+      { name: 'Caffè', cals: 10 }
     ],
     lunch: [
-      { name: 'Grilled Chicken Salad', cals: 450 },
-      { name: 'Apple', cals: 80 }
+      { name: 'Insalata di Pollo Grigliato', cals: 450 },
+      { name: 'Mela', cals: 80 }
     ],
     dinner: [],
     snacks: [
-      { name: 'Protein Shake', cals: 150 }
+      { name: 'Shake Proteico', cals: 150 }
     ]
   });
+
+  // Handler to add food to a specific meal
+  const handleAddFood = (mealType, foodItem) => {
+    setMeals(prevMeals => ({
+      ...prevMeals,
+      [mealType]: [...prevMeals[mealType], foodItem]
+    }));
+  };
 
   return (
     <div className="app-wrapper">
@@ -45,21 +53,25 @@ const DiaryContent = () => {
           <MealSection
             title={t('breakfast')}
             items={meals.breakfast}
+            onAddFood={(foodItem) => handleAddFood('breakfast', foodItem)}
           />
 
           <MealSection
             title={t('lunch')}
             items={meals.lunch}
+            onAddFood={(foodItem) => handleAddFood('lunch', foodItem)}
           />
 
           <MealSection
             title={t('dinner')}
             items={meals.dinner}
+            onAddFood={(foodItem) => handleAddFood('dinner', foodItem)}
           />
 
           <MealSection
             title={t('snacks')}
             items={meals.snacks}
+            onAddFood={(foodItem) => handleAddFood('snacks', foodItem)}
           />
         </div>
 
