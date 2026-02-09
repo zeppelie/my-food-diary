@@ -25,6 +25,9 @@ API calls to Open Food Facts are timing out when searching for food products.
 - **Timeout errors**: Now show "server is taking too long"
 - **Network errors**: Now show "check your internet connection"
 - **API errors**: Now include status code and status text
+- **CORS Preflights**: Browsers send an `OPTIONS` request before the actual `GET` if you add custom headers. This can take several seconds.
+- **Forbidden Headers**: Headers like `User-Agent` cannot be set by the browser. Trying to set them can cause the request to hang or fail.
+- **Vite Proxy**: Ensure your proxy settings in `vite.config.js` are not interfering with external API calls.
 
 ## Testing the Fix
 

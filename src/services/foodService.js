@@ -8,9 +8,9 @@
  */
 
 // Use Italian Open Food Facts endpoint for better Italian product coverage
-// Use global endpoint with parameters for better inclusivity of products sold in Italy
-const OPEN_FOOD_FACTS_API = 'https://world.openfoodfacts.org/cgi/search.pl';
-const OPEN_FOOD_FACTS_PRODUCT_API = 'https://world.openfoodfacts.org/api/v0/product';
+// Use Italian Open Food Facts subdomain for faster regional routing
+const OPEN_FOOD_FACTS_API = 'https://it.openfoodfacts.org/cgi/search.pl';
+const OPEN_FOOD_FACTS_PRODUCT_API = 'https://it.openfoodfacts.org/api/v0/product';
 
 
 /**
@@ -36,12 +36,8 @@ const mapProductToSchema = (apiProduct) => {
         // Extract nutriments (per 100g by default in Open Food Facts)
         const nutriments = apiProduct.nutriments || {};
 
-        // Get product name (prioritize Italian, then generic, then English)
-        const name = apiProduct.product_name_it ||
-            apiProduct.product_name ||
-            apiProduct.product_name_en ||
-            apiProduct.generic_name ||
-            'Unknown Product';
+        // Get product name (Strictly using product_name as requested in limited fields)
+        const name = apiProduct.product_name || 'Unknown Product';
 
         // Skip products without basic nutritional data
         if (name === 'Unknown Product' && !nutriments['energy-kcal_100g']) {
@@ -62,8 +58,8 @@ const mapProductToSchema = (apiProduct) => {
                 carbs: parseFloat((nutriments.carbohydrates_100g || nutriments.carbohydrates || 0).toFixed(1)),
                 fats: parseFloat((nutriments.fat_100g || nutriments.fat || 0).toFixed(1))
             },
-            imageUrl: apiProduct.image_url || apiProduct.image_front_url || null,
-            brand: apiProduct.brands || null
+            imageUrl: apiProduct.image_front_url || null,
+            brand: null // Field excluded for performance optimization
         };
     } catch (error) {
         console.error('Error mapping product:', error);
@@ -90,17 +86,15 @@ export const searchFoodProducts = async (searchQuery, pageSize = 20) => {
     }
 
     try {
-        // Build API URL with parameters
-        // Using Italian country code (cc=it) and language code (lc=it) for Italian products
+        // Build API URL with localized parameters and strictly limited fields
         const params = new URLSearchParams({
             search_terms: trimmedQuery,
             action: 'process',
             json: '1',
-            page_size: pageSize.toString(),
-            cc: 'it', // Country code: Italy
-            lc: 'it', // Language code: Italian
-            sort_by: 'unique_scans_n', // Sort by popularity in Italy
-            fields: 'code,product_name,product_name_it,product_name_en,generic_name,brands,nutriments,image_url,image_front_url'
+            page_size: '15', // Reduced payload size
+            cc: 'it',       // Country: Italy
+            lc: 'it',       // Language: Italian
+            fields: 'code,product_name,nutriments,image_front_url' // Strictly limited fields
         });
 
         const url = `${OPEN_FOOD_FACTS_API}?${params.toString()}`;
@@ -119,8 +113,7 @@ export const searchFoodProducts = async (searchQuery, pageSize = 20) => {
 
         const response = await fetch(url, {
             signal: controller.signal,
-            mode: 'cors', // Explicitly set CORS mode
-            // Removed User-Agent header as it can cause CORS issues in browsers
+            mode: 'cors'
         });
 
         clearTimeout(timeoutId);
