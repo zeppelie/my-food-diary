@@ -3,12 +3,13 @@ import './AddFoodModal.css';
 import { searchFoodProducts } from '../services/foodService';
 import { useDebouncedCallback } from '../utils/debounce';
 import { useLanguage } from '../context/LanguageContext';
+import { getCachedSearch, cacheSearchResults } from '../services/dbService';
 
 /**
  * AddFoodModal Component
  * 
  * Modal dialog for searching and adding food items to meals.
- * Features debounced search, loading states, and error handling.
+ * Features caching, loading states, and error handling.
  */
 const AddFoodModal = ({ isOpen, onClose, onAddFood, mealType }) => {
     const { t } = useLanguage();
@@ -19,38 +20,98 @@ const AddFoodModal = ({ isOpen, onClose, onAddFood, mealType }) => {
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [servingSize, setServingSize] = useState(100);
 
-    // Manual search function (removed debounce for direct trigger)
-    const handleSearch = async (query) => {
-        const trimmedQuery = (query || searchQuery).trim();
+    // Manual search function (uses cache first, then API)
+    const handleSearch = async (query, forceApi = false) => {
+        const trimmedQuery = (typeof query === 'string' ? query : searchQuery).trim();
         if (!trimmedQuery || trimmedQuery.length < 2) {
             setSearchResults([]);
             setIsLoading(false);
             return;
         }
 
-        setIsLoading(true);
+        // If results are already here (e.g. from proactive cache check), don't show loading
+        const alreadyHaveCachedResults = searchResults.length > 0 &&
+            (query === undefined || query === searchQuery);
+
+        if (!alreadyHaveCachedResults || forceApi) {
+            setIsLoading(true);
+        }
+
         setError(null);
 
         try {
+            // Check cache first
+            const cachedResults = await getCachedSearch(trimmedQuery);
+            if (cachedResults && cachedResults.length > 0) {
+                setSearchResults(cachedResults);
+
+                // If we're not forcing API, we can return early with cached results
+                if (!forceApi) {
+                    setIsLoading(false);
+                    return;
+                }
+                // If we ARE forcing API, we keep going to get fresh data from OpenFoodFacts
+                console.log('🔄 Cache hit, but forcing API refresh for complete search...');
+            }
+
+            // Fallback to API (or forced API refresh)
             const results = await searchFoodProducts(trimmedQuery, 30);
-            setSearchResults(results);
+
+            // Only update if we got results (avoid clearing cache if API fails)
+            if (results && results.length > 0) {
+                setSearchResults(results);
+                // Update cache with fresh data
+                await cacheSearchResults(trimmedQuery, results);
+            } else if (!cachedResults || cachedResults.length === 0) {
+                // Only clear if we have absolutely nothing
+                setSearchResults([]);
+            }
         } catch (err) {
-            setError(err.message);
-            setSearchResults([]);
+            // If we had cached results, don't show error if API fails (just keep cache)
+            if (searchResults.length === 0) {
+                setError(err.message);
+            } else {
+                console.warn('API fetch failed after cache hit:', err);
+            }
         } finally {
             setIsLoading(false);
         }
     };
 
+    // Debounced Cache Check (on change)
+    const debouncedCheckCache = useDebouncedCallback(async (value) => {
+        const trimmed = value.trim();
+        if (trimmed.length < 2) return;
+
+        try {
+            const cached = await getCachedSearch(trimmed);
+            if (cached && cached.length > 0) {
+                setSearchResults(cached);
+            }
+        } catch (err) {
+            console.error('Proactive cache check failed:', err);
+        }
+    }, 100);
+
     // Handle search input change
     const handleSearchChange = (e) => {
-        setSearchQuery(e.target.value);
+        const value = e.target.value;
+        setSearchQuery(value);
+        // Be proactive: if we already searched this, show it immediately!
+        // Using debounced version to reduce server load
+        debouncedCheckCache(value);
     };
 
     // Handle key down (specific for Enter)
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
-            handleSearch();
+            // If a product is selected, add it to the diary
+            if (selectedProduct) {
+                handleAddFood();
+            } else {
+                // Otherwise, perform search - FORCE API call on Enter
+                handleSearch(searchQuery, true);
+            }
         }
     };
 
@@ -74,6 +135,7 @@ const AddFoodModal = ({ isOpen, onClose, onAddFood, mealType }) => {
         const foodItem = {
             name: selectedProduct.name,
             brand: selectedProduct.brand,
+            imageUrl: selectedProduct.imageUrl,
             servingSize: servingSize,
             cals: nutrition.calories,
             macros: {

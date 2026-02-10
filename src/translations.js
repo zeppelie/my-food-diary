@@ -25,7 +25,8 @@ export const translations = {
         nutritionInfo: "Nutrition Information",
         calories: "Calories",
         cancel: "Cancel",
-        add: "Add to"
+        add: "Add to",
+        delete: "Delete"
     },
     it: {
         today: "Oggi",
@@ -53,6 +54,7 @@ export const translations = {
         nutritionInfo: "Informazioni Nutrizionali",
         calories: "Calorie",
         cancel: "Annulla",
-        add: "Aggiungi a"
+        add: "Aggiungi a",
+        delete: "Elimina"
     }
 };

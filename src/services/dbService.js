@@ -63,3 +63,42 @@ export const deleteMealEntry = async (id) => {
         return false;
     }
 };
+
+/**
+ * Get cached search results for a query
+ * @param {string} query - The search query
+ * @returns {Promise<Array|null>} Cached results or null if not found
+ */
+export const getCachedSearch = async (query) => {
+    try {
+        const response = await fetch(`/api/search/cache?q=${encodeURIComponent(query)}`);
+        if (!response.ok) return null;
+        const data = await response.json();
+        return data.results;
+    } catch (error) {
+        console.error('Error fetching search cache:', error);
+        return null;
+    }
+};
+
+/**
+ * Cache search results for a query
+ * @param {string} query - The search query
+ * @param {Array} results - The results to cache
+ * @returns {Promise<boolean>} Success status
+ */
+export const cacheSearchResults = async (query, results) => {
+    try {
+        const response = await fetch('/api/search/cache', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ query, results }),
+        });
+        return response.ok;
+    } catch (error) {
+        console.error('Error caching search results:', error);
+        return false;
+    }
+};

@@ -44,6 +44,10 @@
     background: var(--glass-highlight);
 }
 
+.meal-item.clickable {
+    cursor: pointer;
+}
+
 .meal-item-name {
     color: var(--text-main);
     font-weight: 500;

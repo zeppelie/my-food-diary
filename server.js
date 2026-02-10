@@ -36,12 +36,25 @@ function initializeDatabase() {
         proteins REAL,
         carbs REAL,
         fats REAL,
+        image_url TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`, (err) => {
         if (err) {
             console.error('❌ Error creating table:', err.message);
         } else {
             console.log('📊 Meals table ready.');
+        }
+    });
+
+    db.run(`CREATE TABLE IF NOT EXISTS search_cache (
+        query TEXT PRIMARY KEY,
+        results TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`, (err) => {
+        if (err) {
+            console.error('❌ Error creating search_cache table:', err.message);
+        } else {
+            console.log('💾 Search cache table ready.');
         }
     });
 }
@@ -64,7 +77,7 @@ app.get('/api/meals/:date', (req, res) => {
 // Add a meal entry
 app.post('/api/meals', (req, res) => {
     console.log('📥 POST /api/meals received body:', req.body);
-    const { date, meal_type, name, brand, serving_size, calories, proteins, carbs, fats } = req.body;
+    const { date, meal_type, name, brand, serving_size, calories, proteins, carbs, fats, image_url } = req.body;
 
     if (!date || !meal_type || !name) {
         console.warn('⚠️ Validation failed: date, meal_type, or name missing');
@@ -72,9 +85,9 @@ app.post('/api/meals', (req, res) => {
         return;
     }
 
-    const sql = `INSERT INTO meals (date, meal_type, name, brand, serving_size, calories, proteins, carbs, fats) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-    const params = [date, meal_type, name, brand, serving_size, calories, proteins, carbs, fats];
+    const sql = `INSERT INTO meals (date, meal_type, name, brand, serving_size, calories, proteins, carbs, fats, image_url) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const params = [date, meal_type, name, brand, serving_size, calories, proteins, carbs, fats, image_url];
 
     db.run(sql, params, function (err) {
         if (err) {
@@ -87,6 +100,98 @@ app.post('/api/meals', (req, res) => {
             id: this.lastID,
             message: 'Meal added successfully'
         });
+    });
+});
+
+// Search Cache Routes
+// Get cached search results
+app.get('/api/search/cache', (req, res) => {
+    const { q } = req.query;
+    if (!q) {
+        return res.status(400).json({ error: 'Search query is required' });
+    }
+
+    const searchStr = q.toLowerCase().trim();
+    console.log(`🔍 Checking cache for: ${searchStr}`);
+
+    // 1. Try exact match in search_cache
+    db.get('SELECT results FROM search_cache WHERE query = ?', [searchStr], (err, row) => {
+        if (err) {
+            console.error('❌ Cache error (GET):', err.message);
+            return res.status(500).json({ error: err.message });
+        }
+
+        if (row) {
+            console.log(`✅ Cache exact hit for: ${searchStr}`);
+            return res.json({ results: JSON.parse(row.results), source: 'exact' });
+        }
+
+        // 2. Try prefix match in search_cache (e.g. typing "poll" finds "pollo" results from a previous search)
+        db.get('SELECT results FROM search_cache WHERE query LIKE ? ORDER BY length(query) ASC LIMIT 1', [`${searchStr}%`], (err, prefixRow) => {
+            if (prefixRow) {
+                console.log(`✅ Cache prefix hit for: ${searchStr}`);
+                // Only return if results exist
+                const results = JSON.parse(prefixRow.results);
+                if (results && results.length > 0) {
+                    return res.json({ results, source: 'prefix' });
+                }
+            }
+
+            // 3. Try searching in meals history (items user has actually added)
+            // We need to normalize nutrients back to 100g for the UI
+            const historySql = `
+                SELECT name, brand, calories, proteins, carbs, fats, serving_size, image_url 
+                FROM meals 
+                WHERE LOWER(name) LIKE ? OR LOWER(brand) LIKE ?
+                GROUP BY name, brand 
+                LIMIT 10
+            `;
+            db.all(historySql, [`%${searchStr}%`, `%${searchStr}%`], (err, historyRows) => {
+                if (historyRows && historyRows.length > 0) {
+                    console.log(`✅ History hit for: ${searchStr}`);
+                    const results = historyRows.map((row, index) => {
+                        const factor = 100 / (row.serving_size || 100);
+                        return {
+                            id: `hist-${index}-${Date.now()}`,
+                            name: row.name,
+                            brand: row.brand || '',
+                            calories: Math.round((row.calories || 0) * factor),
+                            macros: {
+                                proteins: parseFloat(((row.proteins || 0) * factor).toFixed(1)),
+                                carbs: parseFloat(((row.carbs || 0) * factor).toFixed(1)),
+                                fats: parseFloat(((row.fats || 0) * factor).toFixed(1))
+                            },
+                            imageUrl: row.image_url || null
+                        };
+                    });
+                    return res.json({ results, source: 'history' });
+                }
+
+                console.log(`? Cache miss for: ${searchStr}`);
+                res.json({ results: null });
+            });
+        });
+    });
+});
+
+// Save search results to cache
+app.post('/api/search/cache', (req, res) => {
+    const { query, results } = req.body;
+
+    if (!query || !results) {
+        return res.status(400).json({ error: 'Query and results are required' });
+    }
+
+    console.log(`💾 Caching results for: ${query}`);
+    const sql = `INSERT OR REPLACE INTO search_cache (query, results) VALUES (?, ?)`;
+    const params = [query.toLowerCase().trim(), JSON.stringify(results)];
+
+    db.run(sql, params, function (err) {
+        if (err) {
+            console.error('❌ Cache error (POST):', err.message);
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ message: 'Search results cached' });
     });
 });
 

@@ -61,7 +61,8 @@ const DiaryContent = () => {
         calories: foodItem.cals,
         proteins: foodItem.macros?.proteins,
         carbs: foodItem.macros?.carbs,
-        fats: foodItem.macros?.fats
+        fats: foodItem.macros?.fats,
+        image_url: foodItem.imageUrl
       };
 
       const result = await saveMealEntry(payload);
