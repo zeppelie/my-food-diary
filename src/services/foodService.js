@@ -59,12 +59,33 @@ const mapProductToSchema = (apiProduct) => {
                 fats: parseFloat((nutriments.fat_100g || nutriments.fat || 0).toFixed(1))
             },
             imageUrl: apiProduct.image_front_url || null,
-            brand: null // Field excluded for performance optimization
+            brand: null, // Field excluded for performance optimization
+            suggestedServingSize: parseServingSize(apiProduct.serving_size, apiProduct.serving_quantity)
         };
     } catch (error) {
         console.error('Error mapping product:', error);
         return null;
     }
+};
+
+/**
+ * Helper to parse serving size into a numeric gram value
+ */
+const parseServingSize = (servingSizeStr, servingQuantity) => {
+    // If we have a direct numeric quantity from API, use it
+    if (servingQuantity && !isNaN(servingQuantity)) {
+        return parseFloat(servingQuantity);
+    }
+
+    if (!servingSizeStr) return 100; // Default fallback
+
+    // Try to extract number from string (e.g., "30 g", "30g (1 pack)")
+    const match = servingSizeStr.match(/(\d+(?:\.\d+)?)\s*(g|ml|gr)/i);
+    if (match) {
+        return parseFloat(match[1]);
+    }
+
+    return 100; // Default if nothing found
 };
 
 /**
@@ -94,7 +115,7 @@ export const searchFoodProducts = async (searchQuery, pageSize = 20) => {
             page_size: '15', // Reduced payload size
             cc: 'it',       // Country: Italy
             lc: 'it',       // Language: Italian
-            fields: 'code,product_name,nutriments,image_front_url' // Strictly limited fields
+            fields: 'code,product_name,nutriments,image_front_url,serving_size,serving_quantity' // Added serving size fields
         });
 
         const url = `${OPEN_FOOD_FACTS_API}?${params.toString()}`;

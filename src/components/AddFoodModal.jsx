@@ -219,7 +219,15 @@ const AddFoodModal = ({ isOpen, onClose, onAddFood, mealType }) => {
                                 <div
                                     key={product.id}
                                     className={`result-item ${selectedProduct?.id === product.id ? 'selected' : ''}`}
-                                    onClick={() => setSelectedProduct(product)}
+                                    onClick={() => {
+                                        setSelectedProduct(product);
+                                        // Automatically set serving size from API suggestion if available
+                                        if (product.suggestedServingSize) {
+                                            setServingSize(product.suggestedServingSize);
+                                        } else {
+                                            setServingSize(100);
+                                        }
+                                    }}
                                 >
                                     {product.imageUrl && (
                                         <img src={product.imageUrl} alt={product.name} className="product-image" />
@@ -233,6 +241,11 @@ const AddFoodModal = ({ isOpen, onClose, onAddFood, mealType }) => {
                                             C: {product.macros.carbs}g |
                                             F: {product.macros.fats}g
                                             <span className="per-100g"> (per 100g)</span>
+                                            {product.suggestedServingSize && product.suggestedServingSize !== 100 && (
+                                                <div className="suggested-portion">
+                                                    💡 Portion: {product.suggestedServingSize}g
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

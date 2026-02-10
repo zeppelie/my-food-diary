@@ -239,6 +239,17 @@
   margin-left: 0.5rem;
 }
 
+.suggested-portion {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: #667eea;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: 'Outfit', sans-serif;
+}
+
 /* Empty State */
 .empty-state {
   display: flex;
