@@ -54,7 +54,11 @@ export const translations = {
         veryActive: "Very Active",
         saveProfile: "Save Profile",
         dailyGoalCalc: "Calculated Daily Goal",
-        profileUpdated: "Profile updated successfully!"
+        profileUpdated: "Profile updated successfully!",
+        useCustomGoal: "Use custom calorie goal",
+        customGoal: "Custom Daily Goal",
+        customGoalHint: "You are manually overriding the calculated goal.",
+        calcGoalHint: "Calculated automatically based on your physical data."
     },
     it: {
         today: "Oggi",
@@ -111,6 +115,10 @@ export const translations = {
         veryActive: "Molto Attivo",
         saveProfile: "Salva Profilo",
         dailyGoalCalc: "Obiettivo Giornaliero Calcolato",
-        profileUpdated: "Profilo aggiornato con successo!"
+        profileUpdated: "Profilo aggiornato con successo!",
+        useCustomGoal: "Usa obiettivo calorie personalizzato",
+        customGoal: "Obiettivo Giornaliero Personalizzato",
+        customGoalHint: "Stai sovrascrivendo manualmente l'obiettivo calcolato.",
+        calcGoalHint: "Calcolato automaticamente in base ai tuoi dati fisici."
     }
 };

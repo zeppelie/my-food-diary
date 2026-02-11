@@ -172,12 +172,12 @@ const ProfilePage = ({ onBack }) => {
                                 checked={profile.use_custom_goal}
                                 onChange={handleToggleCustom}
                             />
-                            <span className="switch-label">Use custom calorie goal</span>
+                            <span className="switch-label">{t('useCustomGoal')}</span>
                         </label>
                     </div>
 
                     <div className={`goal-preview card-glass ${profile.use_custom_goal ? 'is-custom' : ''}`}>
-                        <h3>{profile.use_custom_goal ? 'Custom Daily Goal' : t('dailyGoalCalc')}</h3>
+                        <h3>{profile.use_custom_goal ? t('customGoal') : t('dailyGoalCalc')}</h3>
                         {profile.use_custom_goal ? (
                             <div className="custom-goal-input-wrapper">
                                 <input
@@ -194,8 +194,8 @@ const ProfilePage = ({ onBack }) => {
                         )}
                         <p className="calculation-hint">
                             {profile.use_custom_goal
-                                ? "You are manually overriding the calculated goal."
-                                : "Calculated automatically based on your physical data."}
+                                ? t('customGoalHint')
+                                : t('calcGoalHint')}
                         </p>
                     </div>
 
