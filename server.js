@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const port = 3001;
+const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
@@ -58,6 +58,10 @@ function initializeDatabase() {
         }
     });
 }
+
+// Serve static files from the React app build directory
+const distPath = join(__dirname, 'dist');
+app.use(express.static(distPath));
 
 // Routes
 // Get all meals for a specific date
@@ -209,7 +213,13 @@ app.delete('/api/meals/:id', (req, res) => {
     });
 });
 
-app.listen(port, '0.0.0.0', () => {
-    console.log(`🚀 Server running at http://localhost:${port}`);
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get('*', (req, res) => {
+    res.sendFile(join(distPath, 'index.html'));
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running at http://localhost:${PORT}`);
     console.log('📡 Listening on all interfaces (0.0.0.0)');
 });
