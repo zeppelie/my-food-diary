@@ -92,7 +92,12 @@ function initializeDatabase() {
         image_url TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users (id)
-    )`);
+    )`, () => {
+        // Migration: Add user_id if it doesn't exist
+        db.run(`ALTER TABLE meals ADD COLUMN user_id INTEGER`, (err) => {
+            // Ignore error if column already exists
+        });
+    });
 
     db.run(`CREATE TABLE IF NOT EXISTS search_cache (
         query TEXT PRIMARY KEY,
@@ -281,18 +286,64 @@ app.delete('/api/meals/:id', authenticateToken, (req, res) => {
     });
 });
 
-// Cache routes (unprotected for speed)
-app.get('/api/search/cache', (req, res) => {
+// Cache routes with prefix fallback and historical matching
+app.get('/api/search/cache', authenticateToken, (req, res) => {
     const { q } = req.query;
     if (!q) return res.status(400).json({ error: 'Query required' });
     const searchStr = q.toLowerCase().trim();
+
+    // 1. Try exact match in cache
     db.get('SELECT results FROM search_cache WHERE query = ?', [searchStr], (err, row) => {
-        if (row) return res.json({ results: JSON.parse(row.results), source: 'exact' });
-        res.json({ results: null });
+        if (row) return res.json({ results: JSON.parse(row.results), source: 'exact-cache' });
+
+        // 2. Try prefix match in cache
+        db.all('SELECT results FROM search_cache WHERE query LIKE ? LIMIT 5', [`${searchStr}%`], (err, rows) => {
+            let cacheResults = [];
+            if (rows && rows.length > 0) {
+                // Flatten and deduplicate results from multiple cache entries
+                const allResults = rows.flatMap(r => JSON.parse(r.results));
+                const seen = new Set();
+                cacheResults = allResults.filter(item => {
+                    const id = item.id || item.name;
+                    if (seen.has(id)) return false;
+                    seen.add(id);
+                    return true;
+                }).slice(0, 5);
+            }
+
+            // 3. Search user's history in meals table
+            const historySql = `
+                SELECT DISTINCT name, brand, calories as cals, proteins, carbs, fats, image_url as imageUrl
+                FROM meals 
+                WHERE user_id = ? AND (name LIKE ? OR brand LIKE ?)
+                LIMIT 5
+            `;
+            const historyParams = [req.user.id, `%${searchStr}%`, `%${searchStr}%`];
+
+            db.all(historySql, historyParams, (err, historyRows) => {
+                const historyResults = (historyRows || []).map(row => ({
+                    ...row,
+                    id: `hist-${row.name}`,
+                    source: 'history',
+                    macros: {
+                        proteins: row.proteins,
+                        carbs: row.carbs,
+                        fats: row.fats
+                    }
+                }));
+
+                const finalResults = [...historyResults, ...cacheResults];
+                if (finalResults.length > 0) {
+                    return res.json({ results: finalResults, source: 'partial' });
+                }
+
+                res.json({ results: null });
+            });
+        });
     });
 });
 
-app.post('/api/search/cache', (req, res) => {
+app.post('/api/search/cache', authenticateToken, (req, res) => {
     const { query, results } = req.body;
     db.run(`INSERT OR REPLACE INTO search_cache (query, results) VALUES (?, ?)`, [query.toLowerCase().trim(), JSON.stringify(results)], () => {
         res.json({ message: 'Cached' });

@@ -158,7 +158,9 @@ export const deleteMealEntry = async (id) => {
  */
 export const getCachedSearch = async (query) => {
     try {
-        const response = await fetch(`/api/search/cache?q=${encodeURIComponent(query)}`);
+        const response = await fetch(`/api/search/cache?q=${encodeURIComponent(query)}`, {
+            headers: { ...getAuthHeader() }
+        });
         if (!response.ok) return null;
         const data = await response.json();
         return data.results;
@@ -172,7 +174,10 @@ export const cacheSearchResults = async (query, results) => {
     try {
         const response = await fetch('/api/search/cache', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeader()
+            },
             body: JSON.stringify({ query, results }),
         });
         return response.ok;
