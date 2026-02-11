@@ -5,10 +5,11 @@ import SummaryCard from './components/SummaryCard';
 import MealSection from './components/MealSection';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import UserProfile from './components/UserProfile';
+import AuthPage from './components/AuthPage';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
-import { fetchMealsByDate, saveMealEntry, deleteMealEntry } from './services/dbService';
+import { fetchMealsByDate, saveMealEntry, deleteMealEntry, getAuthToken, removeAuthToken } from './services/dbService';
 
-const DiaryContent = () => {
+const DiaryContent = ({ user, onLogout }) => {
   const { t } = useLanguage();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [meals, setMeals] = useState({
@@ -26,6 +27,7 @@ const DiaryContent = () => {
   // Fetch meals when date changes
   useEffect(() => {
     const loadMeals = async () => {
+      if (!user) return;
       const dateStr = formatDate(currentDate);
       const data = await fetchMealsByDate(dateStr);
 
@@ -47,7 +49,7 @@ const DiaryContent = () => {
     };
 
     loadMeals();
-  }, [currentDate]);
+  }, [currentDate, user]);
 
   // Handler to add food to a specific meal
   const handleAddFood = async (mealType, foodItem) => {
@@ -126,7 +128,7 @@ const DiaryContent = () => {
     <div className="app-wrapper">
       <div className="top-bar">
         <LanguageSwitcher />
-        <UserProfile />
+        <UserProfile user={user} onLogout={onLogout} />
       </div>
       <div className="app-container">
 
@@ -180,9 +182,36 @@ const DiaryContent = () => {
 };
 
 function App() {
+  const [user, setUser] = useState(null);
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  useEffect(() => {
+    const token = getAuthToken();
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setUser(payload);
+      } catch (e) {
+        removeAuthToken();
+      }
+    }
+    setIsInitializing(false);
+  }, []);
+
+  const handleLogout = () => {
+    removeAuthToken();
+    setUser(null);
+  };
+
+  if (isInitializing) return <div className="loading-screen">Girt...</div>;
+
   return (
     <LanguageProvider>
-      <DiaryContent />
+      {user ? (
+        <DiaryContent user={user} onLogout={handleLogout} />
+      ) : (
+        <AuthPage onAuthSuccess={(userData) => setUser(userData)} />
+      )}
     </LanguageProvider>
   );
 }

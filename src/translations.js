@@ -28,7 +28,18 @@ export const translations = {
         add: "Add to",
         delete: "Delete",
         profile: "Profile",
-        logout: "Logout"
+        logout: "Logout",
+        login: "Login",
+        signup: "Sign Up",
+        email: "Email",
+        password: "Password",
+        fullName: "Full Name",
+        forgotPassword: "Forgot Password?",
+        alreadyHaveAccount: "Already have an account? Login",
+        needAccount: "Need an account? Sign Up",
+        signingIn: "Signing in...",
+        signingUp: "Creating account...",
+        resetLinkSent: "Reset link sent to your email"
     },
     it: {
         today: "Oggi",
@@ -59,6 +70,17 @@ export const translations = {
         add: "Aggiungi a",
         delete: "Elimina",
         profile: "Profilo",
-        logout: "Logout"
+        logout: "Logout",
+        login: "Accedi",
+        signup: "Registrati",
+        email: "Email",
+        password: "Password",
+        fullName: "Nome Completo",
+        forgotPassword: "Password dimenticata?",
+        alreadyHaveAccount: "Hai già un account? Accedi",
+        needAccount: "Serve un account? Registrati",
+        signingIn: "Accesso in corso...",
+        signingUp: "Creazione account...",
+        resetLinkSent: "Link di ripristino inviato alla tua email"
     }
 };

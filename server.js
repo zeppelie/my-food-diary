@@ -3,12 +3,15 @@ import sqlite3 from 'sqlite3';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-change-this';
 
 app.use(cors());
 app.use(express.json());
@@ -25,8 +28,19 @@ const db = new sqlite3.Database(dbPath, (err) => {
 });
 
 function initializeDatabase() {
+    // Users table
+    db.run(`CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        name TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+    // Meals table (added user_id)
     db.run(`CREATE TABLE IF NOT EXISTS meals (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
         date TEXT NOT NULL,
         meal_type TEXT NOT NULL,
         name TEXT NOT NULL,
@@ -37,189 +51,128 @@ function initializeDatabase() {
         carbs REAL,
         fats REAL,
         image_url TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`, (err) => {
-        if (err) {
-            console.error('❌ Error creating table:', err.message);
-        } else {
-            console.log('📊 Meals table ready.');
-        }
-    });
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+    )`);
 
     db.run(`CREATE TABLE IF NOT EXISTS search_cache (
         query TEXT PRIMARY KEY,
         results TEXT NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`, (err) => {
-        if (err) {
-            console.error('❌ Error creating search_cache table:', err.message);
-        } else {
-            console.log('💾 Search cache table ready.');
-        }
-    });
+    )`);
 }
 
-// Serve static files from the React app build directory
+// Auth Middleware
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.status(401).json({ error: 'Unauthenticated' });
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).json({ error: 'Invalid token' });
+        req.user = user;
+        next();
+    });
+};
+
+// Serve static files
 const distPath = join(__dirname, 'dist');
 app.use(express.static(distPath));
 
-// Routes
-// Get all meals for a specific date
-app.get('/api/meals/:date', (req, res) => {
+// Auth Routes
+app.post('/api/auth/signup', async (req, res) => {
+    const { email, password, name } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        db.run('INSERT INTO users (email, password, name) VALUES (?, ?, ?)', [email, hashedPassword, name], function (err) {
+            if (err) {
+                if (err.message.includes('UNIQUE')) {
+                    return res.status(400).json({ error: 'Email already exists' });
+                }
+                return res.status(500).json({ error: err.message });
+            }
+            const token = jwt.sign({ id: this.lastID, email, name }, JWT_SECRET, { expiresIn: '7d' });
+            res.status(201).json({ token, user: { id: this.lastID, email, name } });
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/auth/login', (req, res) => {
+    const { email, password } = req.body;
+    db.get('SELECT * FROM users WHERE email = ?', [email], async (err, user) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) return res.status(401).json({ error: 'Invalid credentials' });
+
+        const token = jwt.sign({ id: user.id, email: user.email, name: user.name }, JWT_SECRET, { expiresIn: '7d' });
+        res.json({ token, user: { id: user.id, email: user.email, name: user.name } });
+    });
+});
+
+app.post('/api/auth/forgot-password', (req, res) => {
+    const { email } = req.body;
+    // Mocking forgot password logic
+    res.json({ message: 'If an account exists with this email, a reset link will be sent.' });
+});
+
+// Protected Meal Routes
+app.get('/api/meals/:date', authenticateToken, (req, res) => {
     const { date } = req.params;
-    console.log(`🔍 Fetching meals for date: ${date}`);
-    db.all('SELECT * FROM meals WHERE date = ?', [date], (err, rows) => {
-        if (err) {
-            console.error('❌ Database error (GET):', err.message);
-            res.status(500).json({ error: err.message });
-            return;
-        }
+    db.all('SELECT * FROM meals WHERE date = ? AND user_id = ?', [date, req.user.id], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });
 });
 
-// Add a meal entry
-app.post('/api/meals', (req, res) => {
-    console.log('📥 POST /api/meals received body:', req.body);
+app.post('/api/meals', authenticateToken, (req, res) => {
     const { date, meal_type, name, brand, serving_size, calories, proteins, carbs, fats, image_url } = req.body;
-
-    if (!date || !meal_type || !name) {
-        console.warn('⚠️ Validation failed: date, meal_type, or name missing');
-        res.status(400).json({ error: 'Missing required fields: date, meal_type, and name are required' });
-        return;
-    }
-
-    const sql = `INSERT INTO meals (date, meal_type, name, brand, serving_size, calories, proteins, carbs, fats, image_url) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-    const params = [date, meal_type, name, brand, serving_size, calories, proteins, carbs, fats, image_url];
+    const sql = `INSERT INTO meals (user_id, date, meal_type, name, brand, serving_size, calories, proteins, carbs, fats, image_url) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const params = [req.user.id, date, meal_type, name, brand, serving_size, calories, proteins, carbs, fats, image_url];
 
     db.run(sql, params, function (err) {
-        if (err) {
-            console.error('❌ Database error (POST):', err.message);
-            res.status(500).json({ error: err.message });
-            return;
-        }
-        console.log(`✅ Meal added with ID: ${this.lastID}`);
-        res.json({
-            id: this.lastID,
-            message: 'Meal added successfully'
-        });
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ id: this.lastID, message: 'Meal added' });
     });
 });
 
-// Search Cache Routes
-// Get cached search results
+app.delete('/api/meals/:id', authenticateToken, (req, res) => {
+    const { id } = req.params;
+    db.run('DELETE FROM meals WHERE id = ? AND user_id = ?', [id, req.user.id], function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Deleted', changes: this.changes });
+    });
+});
+
+// Cache routes (unprotected for speed)
 app.get('/api/search/cache', (req, res) => {
     const { q } = req.query;
-    if (!q) {
-        return res.status(400).json({ error: 'Search query is required' });
-    }
-
+    if (!q) return res.status(400).json({ error: 'Query required' });
     const searchStr = q.toLowerCase().trim();
-    console.log(`🔍 Checking cache for: ${searchStr}`);
-
-    // 1. Try exact match in search_cache
     db.get('SELECT results FROM search_cache WHERE query = ?', [searchStr], (err, row) => {
-        if (err) {
-            console.error('❌ Cache error (GET):', err.message);
-            return res.status(500).json({ error: err.message });
-        }
-
-        if (row) {
-            console.log(`✅ Cache exact hit for: ${searchStr}`);
-            return res.json({ results: JSON.parse(row.results), source: 'exact' });
-        }
-
-        // 2. Try prefix match in search_cache (e.g. typing "poll" finds "pollo" results from a previous search)
-        db.get('SELECT results FROM search_cache WHERE query LIKE ? ORDER BY length(query) ASC LIMIT 1', [`${searchStr}%`], (err, prefixRow) => {
-            if (prefixRow) {
-                console.log(`✅ Cache prefix hit for: ${searchStr}`);
-                // Only return if results exist
-                const results = JSON.parse(prefixRow.results);
-                if (results && results.length > 0) {
-                    return res.json({ results, source: 'prefix' });
-                }
-            }
-
-            // 3. Try searching in meals history (items user has actually added)
-            // We need to normalize nutrients back to 100g for the UI
-            const historySql = `
-                SELECT name, brand, calories, proteins, carbs, fats, serving_size, image_url 
-                FROM meals 
-                WHERE LOWER(name) LIKE ? OR LOWER(brand) LIKE ?
-                GROUP BY name, brand 
-                LIMIT 10
-            `;
-            db.all(historySql, [`%${searchStr}%`, `%${searchStr}%`], (err, historyRows) => {
-                if (historyRows && historyRows.length > 0) {
-                    console.log(`✅ History hit for: ${searchStr}`);
-                    const results = historyRows.map((row, index) => {
-                        const factor = 100 / (row.serving_size || 100);
-                        return {
-                            id: `hist-${index}-${Date.now()}`,
-                            name: row.name,
-                            brand: row.brand || '',
-                            calories: Math.round((row.calories || 0) * factor),
-                            macros: {
-                                proteins: parseFloat(((row.proteins || 0) * factor).toFixed(1)),
-                                carbs: parseFloat(((row.carbs || 0) * factor).toFixed(1)),
-                                fats: parseFloat(((row.fats || 0) * factor).toFixed(1))
-                            },
-                            imageUrl: row.image_url || null
-                        };
-                    });
-                    return res.json({ results, source: 'history' });
-                }
-
-                console.log(`? Cache miss for: ${searchStr}`);
-                res.json({ results: null });
-            });
-        });
+        if (row) return res.json({ results: JSON.parse(row.results), source: 'exact' });
+        res.json({ results: null });
     });
 });
 
-// Save search results to cache
 app.post('/api/search/cache', (req, res) => {
     const { query, results } = req.body;
-
-    if (!query || !results) {
-        return res.status(400).json({ error: 'Query and results are required' });
-    }
-
-    console.log(`💾 Caching results for: ${query}`);
-    const sql = `INSERT OR REPLACE INTO search_cache (query, results) VALUES (?, ?)`;
-    const params = [query.toLowerCase().trim(), JSON.stringify(results)];
-
-    db.run(sql, params, function (err) {
-        if (err) {
-            console.error('❌ Cache error (POST):', err.message);
-            return res.status(500).json({ error: err.message });
-        }
-        res.json({ message: 'Search results cached' });
+    db.run(`INSERT OR REPLACE INTO search_cache (query, results) VALUES (?, ?)`, [query.toLowerCase().trim(), JSON.stringify(results)], () => {
+        res.json({ message: 'Cached' });
     });
 });
 
-// Delete a meal entry
-app.delete('/api/meals/:id', (req, res) => {
-    const { id } = req.params;
-    console.log(`🗑️ Deleting meal ID: ${id}`);
-    db.run('DELETE FROM meals WHERE id = ?', id, function (err) {
-        if (err) {
-            console.error('❌ Database error (DELETE):', err.message);
-            res.status(500).json({ error: err.message });
-            return;
-        }
-        res.json({ message: 'Meal deleted', changes: this.changes });
-    });
-});
-
-// The "catchall" handler: for any request that doesn't
-// match one above, send back React's index.html file.
 app.use((req, res) => {
     res.sendFile(join(distPath, 'index.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
-    console.log('📡 Listening on all interfaces (0.0.0.0)');
 });

@@ -1,17 +1,73 @@
 /**
  * Diary Database Service
  * 
- * Handles API calls to the local Node/SQLite backend.
+ * Handles API calls to the local Node/SQLite backend with JWT support.
  */
 
+const getAuthHeader = () => {
+    const token = localStorage.getItem('auth_token');
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+};
+
+export const setAuthToken = (token) => localStorage.setItem('auth_token', token);
+export const removeAuthToken = () => localStorage.removeItem('auth_token');
+export const getAuthToken = () => localStorage.getItem('auth_token');
+
 /**
- * Fetch all meals for a specific date
- * @param {string} date - Date in YYYY-MM-DD format
- * @returns {Promise<Array>} List of meal entries
+ * Authentication Methods
+ */
+export const login = async (email, password) => {
+    const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+    });
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Login failed');
+    }
+    const data = await response.json();
+    setAuthToken(data.token);
+    return data;
+};
+
+export const signup = async (email, password, name) => {
+    const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name })
+    });
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Signup failed');
+    }
+    const data = await response.json();
+    setAuthToken(data.token);
+    return data;
+};
+
+export const forgotPassword = async (email) => {
+    const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+    });
+    return await response.json();
+};
+
+/**
+ * Meal Methods (Protected)
  */
 export const fetchMealsByDate = async (date) => {
     try {
-        const response = await fetch(`/api/meals/${date}`);
+        const response = await fetch(`/api/meals/${date}`, {
+            headers: { ...getAuthHeader() }
+        });
+        if (response.status === 401) {
+            removeAuthToken();
+            window.location.reload(); // Force login
+            return [];
+        }
         if (!response.ok) throw new Error('Failed to fetch meals');
         return await response.json();
     } catch (error) {
@@ -20,43 +76,39 @@ export const fetchMealsByDate = async (date) => {
     }
 };
 
-/**
- * Add a new meal entry to the database
- * @param {Object} mealData - The meal object to save
- * @returns {Promise<Object>} The saved meal response
- */
 export const saveMealEntry = async (mealData) => {
-    try {
-        const response = await fetch('/api/meals', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(mealData),
-        });
+    const response = await fetch('/api/meals', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader()
+        },
+        body: JSON.stringify(mealData),
+    });
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to save meal');
+    if (!response.ok) {
+        if (response.status === 401) {
+            removeAuthToken();
+            window.location.reload();
         }
-
-        return await response.json();
-    } catch (error) {
-        console.error('Error saving meal:', error);
-        throw error;
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to save meal');
     }
+
+    return await response.json();
 };
 
-/**
- * Delete a meal entry from the database
- * @param {number} id - The ID of the entry to delete
- * @returns {Promise<boolean>} Success status
- */
 export const deleteMealEntry = async (id) => {
     try {
         const response = await fetch(`/api/meals/${id}`, {
             method: 'DELETE',
+            headers: { ...getAuthHeader() }
         });
+        if (response.status === 401) {
+            removeAuthToken();
+            window.location.reload();
+            return false;
+        }
         return response.ok;
     } catch (error) {
         console.error('Error deleting meal:', error);
@@ -65,9 +117,7 @@ export const deleteMealEntry = async (id) => {
 };
 
 /**
- * Get cached search results for a query
- * @param {string} query - The search query
- * @returns {Promise<Array|null>} Cached results or null if not found
+ * Cache Methods (Unprotected)
  */
 export const getCachedSearch = async (query) => {
     try {
@@ -81,19 +131,11 @@ export const getCachedSearch = async (query) => {
     }
 };
 
-/**
- * Cache search results for a query
- * @param {string} query - The search query
- * @param {Array} results - The results to cache
- * @returns {Promise<boolean>} Success status
- */
 export const cacheSearchResults = async (query, results) => {
     try {
         const response = await fetch('/api/search/cache', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ query, results }),
         });
         return response.ok;
