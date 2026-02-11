@@ -58,7 +58,8 @@ export const translations = {
         useCustomGoal: "Use custom calorie goal",
         customGoal: "Custom Daily Goal",
         customGoalHint: "You are manually overriding the calculated goal.",
-        calcGoalHint: "Calculated automatically based on your physical data."
+        calcGoalHint: "Calculated automatically based on your physical data.",
+        loadingProfile: "Loading Profile..."
     },
     it: {
         today: "Oggi",
@@ -119,6 +120,7 @@ export const translations = {
         useCustomGoal: "Usa obiettivo calorie personalizzato",
         customGoal: "Obiettivo Giornaliero Personalizzato",
         customGoalHint: "Stai sovrascrivendo manualmente l'obiettivo calcolato.",
-        calcGoalHint: "Calcolato automaticamente in base ai tuoi dati fisici."
+        calcGoalHint: "Calcolato automaticamente in base ai tuoi dati fisici.",
+        loadingProfile: "Caricamento Profilo..."
     }
 };

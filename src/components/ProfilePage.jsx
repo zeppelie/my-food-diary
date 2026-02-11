@@ -96,7 +96,7 @@ const ProfilePage = ({ onBack }) => {
         }
     };
 
-    if (isLoading) return <div className="loading-screen">Loading Profile...</div>;
+    if (isLoading) return <div className="loading-screen">{t('loadingProfile')}</div>;
 
     return (
         <div className="profile-page-container">
@@ -187,10 +187,10 @@ const ProfilePage = ({ onBack }) => {
                                     onChange={handleInputChange}
                                     className="goal-input"
                                 />
-                                <span className="goal-unit">kcal</span>
+                                <span className="goal-unit">{t('kcal')}</span>
                             </div>
                         ) : (
-                            <div className="goal-value">{profile.daily_kcal_goal} <span>kcal</span></div>
+                            <div className="goal-value">{profile.daily_kcal_goal} <span>{t('kcal')}</span></div>
                         )}
                         <p className="calculation-hint">
                             {profile.use_custom_goal
