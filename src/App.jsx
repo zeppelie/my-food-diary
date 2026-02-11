@@ -7,18 +7,35 @@ import LanguageSwitcher from './components/LanguageSwitcher';
 import UserProfile from './components/UserProfile';
 import AuthPage from './components/AuthPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
+import ProfilePage from './components/ProfilePage';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
-import { fetchMealsByDate, saveMealEntry, deleteMealEntry, getAuthToken, removeAuthToken } from './services/dbService';
+import { fetchMealsByDate, saveMealEntry, deleteMealEntry, getAuthToken, removeAuthToken, fetchUserProfile } from './services/dbService';
 
-const DiaryContent = ({ user, onLogout }) => {
+const DiaryContent = ({ user, onLogout, onProfileClick }) => {
   const { t } = useLanguage();
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [userGoal, setUserGoal] = useState(2000);
   const [meals, setMeals] = useState({
     breakfast: [],
     lunch: [],
     dinner: [],
     snacks: []
   });
+
+  // Fetch user profile for goals
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const profile = await fetchUserProfile();
+        if (profile && profile.daily_kcal_goal) {
+          setUserGoal(profile.daily_kcal_goal);
+        }
+      } catch (err) {
+        console.error('Failed to load profile goal:', err);
+      }
+    };
+    loadProfile();
+  }, [user]);
 
   // Helper to format date as YYYY-MM-DD
   const formatDate = (date) => {
@@ -114,7 +131,7 @@ const DiaryContent = ({ user, onLogout }) => {
 
   const totals = calculateTotals();
   const summaryData = {
-    goal: 2200,
+    goal: userGoal,
     food: totals.food,
     exercise: 0
   };
@@ -129,7 +146,7 @@ const DiaryContent = ({ user, onLogout }) => {
     <div className="app-wrapper">
       <div className="top-bar">
         <LanguageSwitcher />
-        <UserProfile user={user} onLogout={onLogout} />
+        <UserProfile user={user} onLogout={onLogout} onProfileClick={onProfileClick} />
       </div>
       <div className="app-container">
 
@@ -223,8 +240,14 @@ function App() {
     <LanguageProvider>
       {currentPage === 'reset' ? (
         <ResetPasswordPage onComplete={() => setCurrentPage('auth')} />
+      ) : currentPage === 'profile' ? (
+        <ProfilePage onBack={() => setCurrentPage('diary')} />
       ) : user ? (
-        <DiaryContent user={user} onLogout={handleLogout} />
+        <DiaryContent
+          user={user}
+          onLogout={handleLogout}
+          onProfileClick={() => setCurrentPage('profile')}
+        />
       ) : (
         <AuthPage onAuthSuccess={(userData) => {
           setUser(userData);

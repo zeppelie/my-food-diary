@@ -1,0 +1,191 @@
+.profile-page-container {
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.profile-card {
+    width: 100%;
+    max-width: 500px;
+    padding: 2rem;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.profile-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.back-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(-3px);
+}
+
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    color: white;
+    font-size: 1rem;
+}
+
+.form-group select option {
+    background: #1a1a2e;
+    color: white;
+}
+
+.goal-preview {
+    background: linear-gradient(135deg, rgba(79, 172, 254, 0.2) 0%, rgba(0, 242, 254, 0.2) 100%);
+    border: 1px solid rgba(79, 172, 254, 0.3);
+    padding: 1.5rem;
+    border-radius: 16px;
+    text-align: center;
+    margin: 1rem 0;
+}
+
+.goal-preview h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #4facfe;
+}
+
+.goal-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: white;
+}
+
+.goal-value span {
+    font-size: 1rem;
+    font-weight: 400;
+    opacity: 0.6;
+}
+
+.custom-goal-toggle {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: -1rem;
+    z-index: 1;
+}
+
+.switch-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+}
+
+.switch-container input {
+    width: auto;
+    margin: 0;
+}
+
+.goal-preview.is-custom {
+    background: linear-gradient(135deg, rgba(254, 172, 79, 0.2) 0%, rgba(254, 242, 0, 0.2) 100%);
+    border-color: rgba(254, 172, 79, 0.3);
+}
+
+.goal-preview.is-custom h3 {
+    color: #feb44f;
+}
+
+.custom-goal-input-wrapper {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.goal-input {
+    background: none !important;
+    border: none !important;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 0 !important;
+    width: 150px !important;
+    text-align: center;
+    font-size: 2.5rem !important;
+    font-weight: 800 !important;
+    color: white !important;
+    padding: 0 !important;
+}
+
+.goal-input:focus {
+    border-bottom-color: #4facfe !important;
+    outline: none;
+}
+
+.goal-unit {
+    font-size: 1rem;
+    opacity: 0.6;
+    color: white;
+}
+
+.calculation-hint {
+    margin: 0.5rem 0 0 0;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.4);
+    font-style: italic;
+}
+
+.save-btn {
+    padding: 1rem !important;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 1rem;
+}

@@ -69,6 +69,30 @@ export const resetPassword = async (token, newPassword) => {
 };
 
 /**
+ * User Profile Methods
+ */
+export const fetchUserProfile = async () => {
+    const response = await fetch('/api/user/profile', {
+        headers: { ...getAuthHeader() }
+    });
+    if (!response.ok) throw new Error('Failed to fetch profile');
+    return await response.json();
+};
+
+export const updateUserProfile = async (profileData) => {
+    const response = await fetch('/api/user/profile', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader()
+        },
+        body: JSON.stringify(profileData)
+    });
+    if (!response.ok) throw new Error('Failed to update profile');
+    return await response.json();
+};
+
+/**
  * Meal Methods (Protected)
  */
 export const fetchMealsByDate = async (date) => {

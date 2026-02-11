@@ -39,7 +39,22 @@ export const translations = {
         needAccount: "Need an account? Sign Up",
         signingIn: "Signing in...",
         signingUp: "Creating account...",
-        resetLinkSent: "Reset link sent to your email"
+        resetLinkSent: "Reset link sent to your email",
+        // Profile fields
+        weight: "Weight (kg)",
+        height: "Height (cm)",
+        age: "Age",
+        gender: "Gender",
+        male: "Male",
+        female: "Female",
+        activityLevel: "Activity Level",
+        sedentary: "Sedentary",
+        lightlyActive: "Lightly Active",
+        moderatelyActive: "Moderately Active",
+        veryActive: "Very Active",
+        saveProfile: "Save Profile",
+        dailyGoalCalc: "Calculated Daily Goal",
+        profileUpdated: "Profile updated successfully!"
     },
     it: {
         today: "Oggi",
@@ -81,6 +96,21 @@ export const translations = {
         needAccount: "Serve un account? Registrati",
         signingIn: "Accesso in corso...",
         signingUp: "Creazione account...",
-        resetLinkSent: "Link di ripristino inviato alla tua email"
+        resetLinkSent: "Link di ripristino inviato alla tua email",
+        // Profile fields
+        weight: "Peso (kg)",
+        height: "Altezza (cm)",
+        age: "Età",
+        gender: "Genere",
+        male: "Uomo",
+        female: "Donna",
+        activityLevel: "Livello di Attività",
+        sedentary: "Sedentario",
+        lightlyActive: "Leggermente Attivo",
+        moderatelyActive: "Moderatamente Attivo",
+        veryActive: "Molto Attivo",
+        saveProfile: "Salva Profilo",
+        dailyGoalCalc: "Obiettivo Giornaliero Calcolato",
+        profileUpdated: "Profilo aggiornato con successo!"
     }
 };

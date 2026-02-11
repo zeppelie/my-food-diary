@@ -50,8 +50,31 @@ function initializeDatabase() {
         verification_token TEXT,
         reset_token TEXT,
         reset_token_expiry DATETIME,
+        weight REAL,
+        height REAL,
+        age INTEGER,
+        gender TEXT,
+        activity_level REAL DEFAULT 1.2,
+        daily_kcal_goal INTEGER DEFAULT 2000,
+        use_custom_goal INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
+    )`, () => {
+        // Migration: Add columns if they don't exist
+        const columns = [
+            ['weight', 'REAL'],
+            ['height', 'REAL'],
+            ['age', 'INTEGER'],
+            ['gender', 'TEXT'],
+            ['activity_level', 'REAL DEFAULT 1.2'],
+            ['daily_kcal_goal', 'INTEGER DEFAULT 2000'],
+            ['use_custom_goal', 'INTEGER DEFAULT 0']
+        ];
+        columns.forEach(([name, type]) => {
+            db.run(`ALTER TABLE users ADD COLUMN ${name} ${type}`, (err) => {
+                // Ignore error if column already exists
+            });
+        });
+    });
 
     // Meals table (added user_id)
     db.run(`CREATE TABLE IF NOT EXISTS meals (
@@ -160,6 +183,23 @@ app.get('/api/auth/verify/:token', (req, res) => {
             if (err) return res.status(500).send('Database error');
             res.send('<h1>Account Verified!</h1><p>You can now close this tab and log in.</p>');
         });
+    });
+});
+
+// Profile Routes
+app.get('/api/user/profile', authenticateToken, (req, res) => {
+    db.get('SELECT email, name, weight, height, age, gender, activity_level, daily_kcal_goal, use_custom_goal FROM users WHERE id = ?', [req.user.id], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(row);
+    });
+});
+
+app.post('/api/user/profile', authenticateToken, (req, res) => {
+    const { weight, height, age, gender, activity_level, daily_kcal_goal, use_custom_goal } = req.body;
+    const sql = `UPDATE users SET weight = ?, height = ?, age = ?, gender = ?, activity_level = ?, daily_kcal_goal = ?, use_custom_goal = ? WHERE id = ?`;
+    db.run(sql, [weight, height, age, gender, activity_level, daily_kcal_goal, use_custom_goal ? 1 : 0, req.user.id], function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Profile updated' });
     });
 });
 
