@@ -26,7 +26,9 @@ export const translations = {
         calories: "Calories",
         cancel: "Cancel",
         add: "Add to",
-        delete: "Delete"
+        delete: "Delete",
+        profile: "Profile",
+        logout: "Logout"
     },
     it: {
         today: "Oggi",
@@ -55,6 +57,8 @@ export const translations = {
         calories: "Calorie",
         cancel: "Annulla",
         add: "Aggiungi a",
-        delete: "Elimina"
+        delete: "Elimina",
+        profile: "Profilo",
+        logout: "Logout"
     }
 };

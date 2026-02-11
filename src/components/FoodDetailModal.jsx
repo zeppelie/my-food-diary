@@ -1,6 +1,7 @@
 import React from 'react';
 import './AddFoodModal.css'; // Reusing common modal styles
 import { useLanguage } from '../context/LanguageContext';
+import CachedImage from './CachedImage';
 
 const FoodDetailModal = ({ isOpen, onClose, item, onDelete }) => {
     const { t } = useLanguage();
@@ -30,7 +31,7 @@ const FoodDetailModal = ({ isOpen, onClose, item, onDelete }) => {
                 <div className="modal-body">
                     {item.image_url && (
                         <div className="product-image-large">
-                            <img src={item.image_url} alt={item.name} />
+                            <CachedImage src={item.image_url} alt={item.name} />
                         </div>
                     )}
 

@@ -4,6 +4,7 @@ import DateHeader from './components/DateHeader';
 import SummaryCard from './components/SummaryCard';
 import MealSection from './components/MealSection';
 import LanguageSwitcher from './components/LanguageSwitcher';
+import UserProfile from './components/UserProfile';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { fetchMealsByDate, saveMealEntry, deleteMealEntry } from './services/dbService';
 
@@ -123,7 +124,10 @@ const DiaryContent = () => {
 
   return (
     <div className="app-wrapper">
-      <LanguageSwitcher />
+      <div className="top-bar">
+        <LanguageSwitcher />
+        <UserProfile />
+      </div>
       <div className="app-container">
 
         <div className="date-header-wrapper">

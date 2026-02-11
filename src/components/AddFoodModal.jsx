@@ -4,6 +4,7 @@ import { searchFoodProducts } from '../services/foodService';
 import { useDebouncedCallback } from '../utils/debounce';
 import { useLanguage } from '../context/LanguageContext';
 import { getCachedSearch, cacheSearchResults } from '../services/dbService';
+import CachedImage from './CachedImage';
 
 /**
  * AddFoodModal Component
@@ -230,7 +231,7 @@ const AddFoodModal = ({ isOpen, onClose, onAddFood, mealType }) => {
                                     }}
                                 >
                                     {product.imageUrl && (
-                                        <img src={product.imageUrl} alt={product.name} className="product-image" />
+                                        <CachedImage src={product.imageUrl} alt={product.name} className="product-image" />
                                     )}
                                     <div className="product-info">
                                         <div className="product-name">{product.name}</div>
