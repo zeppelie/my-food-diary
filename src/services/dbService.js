@@ -55,6 +55,19 @@ export const forgotPassword = async (email) => {
     return await response.json();
 };
 
+export const resetPassword = async (token, newPassword) => {
+    const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, newPassword })
+    });
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Reset failed');
+    }
+    return await response.json();
+};
+
 /**
  * Meal Methods (Protected)
  */

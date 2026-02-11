@@ -6,6 +6,7 @@ import MealSection from './components/MealSection';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import UserProfile from './components/UserProfile';
 import AuthPage from './components/AuthPage';
+import ResetPasswordPage from './components/ResetPasswordPage';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { fetchMealsByDate, saveMealEntry, deleteMealEntry, getAuthToken, removeAuthToken } from './services/dbService';
 
@@ -184,16 +185,28 @@ const DiaryContent = ({ user, onLogout }) => {
 function App() {
   const [user, setUser] = useState(null);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [currentPage, setCurrentPage] = useState('auth'); // auth, diary, reset
 
   useEffect(() => {
+    // Check for reset password path
+    if (window.location.pathname === '/reset-password') {
+      setCurrentPage('reset');
+      setIsInitializing(false);
+      return;
+    }
+
     const token = getAuthToken();
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         setUser(payload);
+        setCurrentPage('diary');
       } catch (e) {
         removeAuthToken();
+        setCurrentPage('auth');
       }
+    } else {
+      setCurrentPage('auth');
     }
     setIsInitializing(false);
   }, []);
@@ -201,16 +214,22 @@ function App() {
   const handleLogout = () => {
     removeAuthToken();
     setUser(null);
+    setCurrentPage('auth');
   };
 
   if (isInitializing) return <div className="loading-screen">Girt...</div>;
 
   return (
     <LanguageProvider>
-      {user ? (
+      {currentPage === 'reset' ? (
+        <ResetPasswordPage onComplete={() => setCurrentPage('auth')} />
+      ) : user ? (
         <DiaryContent user={user} onLogout={handleLogout} />
       ) : (
-        <AuthPage onAuthSuccess={(userData) => setUser(userData)} />
+        <AuthPage onAuthSuccess={(userData) => {
+          setUser(userData);
+          setCurrentPage('diary');
+        }} />
       )}
     </LanguageProvider>
   );
